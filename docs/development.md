@@ -8,7 +8,7 @@ You need a stable Rust toolchain from [rustup](https://rustup.rs). On Windows, y
 cargo build --release
 ```
 
-The binary lands in `target/release/`. On Windows, the C runtime is linked statically (see [`.cargo/config.toml`](../.cargo/config.toml)), so the `.exe` runs without the Visual C++ Redistributable.
+The binary lands in `target/release/`. With [Nix](https://nixos.org), `nix build` builds and tests it into `result/bin/`, and `nix develop` gives you a shell with the Rust toolchain. On Windows, the C runtime is linked statically (see [`.cargo/config.toml`](../.cargo/config.toml)), so the `.exe` runs without the Visual C++ Redistributable.
 
 ## Tooling
 

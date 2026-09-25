@@ -11,6 +11,14 @@ xattr -d com.apple.quarantine ~/.local/bin/edgehop
 chmod +x ~/.local/bin/edgehop
 ```
 
+On macOS, you can also install edgehop with [Nix](https://nixos.org):
+
+```shell
+nix profile add github:ytausch/edgehop
+```
+
+Or add the flake to your nix-darwin or Home Manager configuration and use its `packages.aarch64-darwin.default`. Every rebuild creates a new store path, so the [Input Monitoring](#input-monitoring) grant has to be renewed when edgehop is updated.
+
 On **Windows**, put the binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`.
 
 ## Start at login
