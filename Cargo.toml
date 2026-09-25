@@ -1,6 +1,6 @@
 [package]
 name = "edgehop"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "Switch Logitech Easy-Switch devices when the cursor hits a screen edge"
 license = "MIT"
