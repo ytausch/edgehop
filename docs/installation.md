@@ -47,22 +47,23 @@ Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it i
 
 ### Windows
 
-Create a shortcut in the Startup folder (`shell:startup`). Its console window starts minimized and is hidden once edgehop has loaded its config, so edgehop runs without a taskbar button. In PowerShell:
+Register a scheduled task that runs at login. Windows holds back apps in the Startup folder and the `Run` registry key until the system is idle, often for half a minute or more; a task with a logon trigger starts right away. Its console window is hidden once edgehop has loaded its config, so edgehop runs without a taskbar button. In PowerShell:
 
 ```powershell
-$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(
-  "$([Environment]::GetFolderPath('Startup'))\edgehop.lnk")
-$shortcut.TargetPath = (Get-Command edgehop).Source
-$shortcut.Arguments = "--watch --hide-console"
-$shortcut.WindowStyle = 7  # minimized
-$shortcut.Save()
+$action = New-ScheduledTaskAction -Execute (Get-Command edgehop).Source -Argument "--watch --hide-console"
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+  -ExecutionTimeLimit ([TimeSpan]::Zero)
+Register-ScheduledTask -TaskName edgehop -Action $action -Trigger $trigger -Settings $settings
 ```
 
-Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch --hide-console` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
+The settings keep the task running: by default, Task Scheduler doesn't start a task on battery, stops it when the computer is unplugged, and ends it after three days.
+
+Or by hand: open Task Scheduler and choose **Create Task**. Under **Triggers**, add one that begins **At log on** for your user. Under **Actions**, start `edgehop.exe` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`) with the arguments `--watch --hide-console`. Under **Conditions**, clear **Start the task only if the computer is on AC power**, and under **Settings**, clear **Stop the task if it runs longer than**.
+
+Run `Start-ScheduledTask edgehop` to start it without logging out, and `Unregister-ScheduledTask edgehop` to remove it. If you set up edgehop with a shortcut in the Startup folder before, delete that shortcut, or two copies run.
 
 With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
-
-If the window still opens at login, Windows Terminal is your default terminal: it ignores the shortcut's **Minimized** setting. Switch the default to **Windows Console Host**, which honors it, under Settings → System → For developers → Terminal, or in Windows Terminal under Settings → Startup → Default terminal application. This applies to all console programs, not just edgehop.
 
 ### macOS
 
