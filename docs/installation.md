@@ -47,19 +47,20 @@ Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it i
 
 ### Windows
 
-Create a shortcut in the Startup folder (`shell:startup`) that runs edgehop through `conhost.exe --headless`, so it runs without a window. In PowerShell:
+Create a shortcut in the Startup folder (`shell:startup`). The window starts minimized; its console shows the log. In PowerShell:
 
 ```powershell
 $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(
   "$([Environment]::GetFolderPath('Startup'))\edgehop.lnk")
-$shortcut.TargetPath = "$env:WINDIR\System32\conhost.exe"
-$shortcut.Arguments = "--headless `"$((Get-Command edgehop).Source)`" --watch"
+$shortcut.TargetPath = (Get-Command edgehop).Source
+$shortcut.Arguments = "--watch"
+$shortcut.WindowStyle = 7  # minimized
 $shortcut.Save()
 ```
 
-Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, and create a shortcut to `C:\Windows\System32\conhost.exe --headless "<path to edgehop.exe>" --watch` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`).
+Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
 
-Without a window, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, for example while setting up your config, stop it and run `edgehop --watch` in a terminal.
+If the window still opens at login, Windows Terminal is your default terminal: it ignores the shortcut's **Minimized** setting. Switch the default to **Windows Console Host**, which honors it, under Settings → System → For developers → Terminal, or in Windows Terminal under Settings → Startup → Default terminal application. This applies to all console programs, not just edgehop.
 
 ### macOS
 
