@@ -33,7 +33,13 @@ xattr -d com.apple.quarantine ~/.local/bin/edgehop
 chmod +x ~/.local/bin/edgehop
 ```
 
-On **Windows**, put the downloaded binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`.
+On **Windows**, put the downloaded binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`. The binary isn't signed, so SmartScreen blocks a downloaded copy with "Windows protected your PC". Unblock it once:
+
+```powershell
+Unblock-File "$env:LOCALAPPDATA\Programs\edgehop\edgehop.exe"
+```
+
+If Smart App Control is on (Windows 11), it blocks unsigned binaries however you install them, and it has no per-app exceptions. edgehop only runs with Smart App Control turned off, under Windows Security → App & browser control.
 
 ## Start at login
 
@@ -41,18 +47,20 @@ Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it i
 
 ### Windows
 
-Create a shortcut in the Startup folder (`shell:startup`). The window starts minimized; its console shows the log. In PowerShell:
+Create a shortcut in the Startup folder (`shell:startup`). Its console window starts minimized and is hidden once edgehop has loaded its config, so edgehop runs without a taskbar button. In PowerShell:
 
 ```powershell
 $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(
   "$([Environment]::GetFolderPath('Startup'))\edgehop.lnk")
 $shortcut.TargetPath = (Get-Command edgehop).Source
-$shortcut.Arguments = "--watch"
+$shortcut.Arguments = "--watch --hide-console"
 $shortcut.WindowStyle = 7  # minimized
 $shortcut.Save()
 ```
 
-Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
+Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch --hide-console` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
+
+With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
 
 ### macOS
 
