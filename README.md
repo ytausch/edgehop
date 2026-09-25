@@ -45,14 +45,14 @@ usage = 0x0202
 device_index = 0xFF
 ```
 
-Run `edgehop --list` to find the ids of your devices. See [configuration](docs/configuration.md) for where the file goes and what each field means.
+Run `edgehop --list` to get the `[[devices]]` entries of your connected devices, ready to paste. See [configuration](docs/configuration.md) for where the file goes and what each field means.
 
 ## 🎯 Usage
 
 ```shell
 edgehop --watch        # switch whenever the cursor rests at a configured edge
 edgehop --switch 1     # switch every configured device to channel 1 once, and exit
-edgehop --list         # list the HID interfaces of connected Logitech devices
+edgehop --list         # list the connected Logitech devices as config entries
 ```
 
 Add `--verbose` to log every step.

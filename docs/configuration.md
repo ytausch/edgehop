@@ -30,7 +30,22 @@ device_index = 0xFF
 
 ## Finding your devices
 
-`edgehop --list` shows the ids and usages of every connected Logitech HID interface. Each device has several. Pick the HID++ one:
+`edgehop --list` asks every connected Logitech device for its name and its Easy-Switch channels, including each device paired to a Logi Bolt or Unifying receiver, and prints them as config entries:
+
+```toml
+# MX Keys S via USB Receiver (0xC548) slot 1, on Easy-Switch channel 1 of 3
+[[devices]]
+name = "MX Keys S"
+vendor_id = 0x046D
+product_id = 0xC548
+usage_page = 0xFF00
+usage = 0x0002
+device_index = 0x01
+```
+
+Copy the entries of the devices you want to switch into your config, or append them all with `edgehop --list >> config.toml`. A device that is asleep may not answer: press a key or click to wake it, and list again. `edgehop --list --verbose` also logs every HID interface it saw.
+
+The entries use each device's HID++ interface:
 
 | Connection                    | `product_id`     | `usage_page` | `usage`  | `device_index`         |
 | ----------------------------- | ---------------- | ------------ | -------- | ---------------------- |

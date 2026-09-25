@@ -7,6 +7,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use log::debug;
+
 use crate::config::Device;
 
 pub const LOGITECH: u16 = 0x046D;
@@ -137,6 +139,23 @@ impl fmt::Display for Interface {
             self.vendor_id, self.product_id, self.usage_page, self.usage, self.product
         )
     }
+}
+
+/// Opens `interface` for HID++, joined with its short report interface among
+/// `interfaces` if it has one: without it, a receiver's error for a device it
+/// cannot reach is lost, and the request just times out.
+pub fn open_hidpp<H: Hid>(
+    hid: &mut H,
+    interface: &Interface,
+    interfaces: &[Interface],
+) -> io::Result<Joined<H::Handle>> {
+    let handle = hid.open(interface)?;
+    let short_reports = interface.short_reports(interfaces).and_then(|short| {
+        hid.open(short)
+            .inspect_err(|e| debug!("cannot open {short}: {e}"))
+            .ok()
+    });
+    Ok(Joined::new(handle, short_reports))
 }
 
 /// The interfaces of connected Logitech devices, sorted by product id and

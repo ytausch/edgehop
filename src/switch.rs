@@ -1,11 +1,11 @@
 //! Switching every configured device to a channel.
 
 use anyhow::{Context, Result};
-use log::{Level, debug, info, log};
+use log::{Level, info, log};
 
 use crate::{
     config::{Channel, Device},
-    hid::{Hid, Interface, Joined},
+    hid::{self, Hid, Interface},
     hidpp,
 };
 
@@ -67,15 +67,7 @@ fn switch_one(
         .iter()
         .find(|interface| interface.matches(device))
         .context("not connected")?;
-    let handle = hid.open(interface).context("cannot open")?;
-    // Without the short reports, a receiver's error for a device it cannot
-    // reach is lost, and the request just times out.
-    let short_reports = interface.short_reports(interfaces).and_then(|short| {
-        hid.open(short)
-            .inspect_err(|e| debug!("cannot open {short}: {e}"))
-            .ok()
-    });
-    let handle = Joined::new(handle, short_reports);
+    let handle = hid::open_hidpp(hid, interface, interfaces).context("cannot open")?;
     hidpp::change_host(&handle, device.device_index, channel.host_index())?;
     Ok(())
 }
