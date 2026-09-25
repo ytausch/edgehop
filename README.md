@@ -1,15 +1,11 @@
 # edgehop
 
-<div align="center">
-
 [![CI Status][ci-badge]][ci]
 [![License][license-badge]](LICENSE)
 
 [ci-badge]: https://img.shields.io/github/actions/workflow/status/ytausch/edgehop/ci.yml?branch=main&style=flat-square&label=CI
 [ci]: https://github.com/ytausch/edgehop/actions/workflows/ci.yml
 [license-badge]: https://img.shields.io/github/license/ytausch/edgehop?style=flat-square
-
-</div>
 
 Push the mouse cursor against an outer edge of the screen, and your Logitech keyboard and mouse switch to another computer.
 
