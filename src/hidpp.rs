@@ -1,8 +1,9 @@
 //! Just enough HID++ 2.0 to move a device to another Easy-Switch host: look up
 //! the ChangeHost feature (0x1814) through IRoot, then call its
-//! setCurrentHost function.
+//! setCurrentHost function. `edgehop --list` also asks for the device's name
+//! (DeviceName, 0x0005) and its hosts (ChangeHost's getHostInfo).
 //!
-//! Every message is a 20-byte long report:
+//! Every request is a 20-byte long report:
 //!
 //! ```text
 //! 11 <device index> <feature index> <function << 4 | software id> <params...>
@@ -36,6 +37,8 @@ const RECEIVER_ERROR: u8 = 0x8F;
 /// right now, as Solaar reads them: connection request failed, and resource
 /// error.
 const UNREACHABLE: [u8; 2] = [0x04, 0x09];
+/// The HID++ 1.0 error a receiver returns for an empty slot.
+pub const UNKNOWN_DEVICE: u8 = 0x08;
 /// Tags our requests so their replies can be told apart; any nonzero value
 /// works.
 const SOFTWARE_ID: u8 = 0x0A;
@@ -43,7 +46,11 @@ const SOFTWARE_ID: u8 = 0x0A;
 /// IRoot is always at feature index 0; its function 0 is getFeature.
 const IROOT: u8 = 0x00;
 const GET_FEATURE: u8 = 0;
+const DEVICE_NAME: u16 = 0x0005;
+const GET_NAME_LENGTH: u8 = 0;
+const GET_NAME: u8 = 1;
 const CHANGE_HOST: u16 = 0x1814;
+const GET_HOST_INFO: u8 = 0;
 const SET_CURRENT_HOST: u8 = 1;
 
 /// Replies arrive within tens of milliseconds. A lost report, which happens
@@ -69,15 +76,19 @@ pub enum Error {
     Receiver(u8),
 }
 
+/// A device's Easy-Switch hosts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Hosts {
+    pub count: u8,
+    /// Zero-based, as on the wire.
+    pub current: u8,
+}
+
 /// Tells the device at `device_index` behind `handle` to switch to the
 /// zero-based `host`.
 pub fn change_host(handle: &impl Handle, device_index: u8, host: u8) -> Result<(), Error> {
-    let [high, low] = CHANGE_HOST.to_be_bytes();
-    let get_feature = Request::new(device_index, IROOT, GET_FEATURE, &[high, low]);
-    let feature_index = match call(handle, &get_feature)?[0] {
-        0 => return Err(Error::Unsupported),
-        index => index,
-    };
+    let feature_index =
+        feature_index(handle, device_index, CHANGE_HOST)?.ok_or(Error::Unsupported)?;
     debug!("ChangeHost is at feature index {feature_index:#04X}");
 
     let set_current_host = Request::new(device_index, feature_index, SET_CURRENT_HOST, &[host]);
@@ -88,6 +99,52 @@ pub fn change_host(handle: &impl Handle, device_index: u8, host: u8) -> Result<(
         Err(Error::Io(_)) | Ok(_) => Ok(()),
         Err(e) => Err(e),
     }
+}
+
+/// The name of the device at `device_index` behind `handle`, or `None` if it
+/// does not tell.
+pub fn device_name(handle: &impl Handle, device_index: u8) -> Result<Option<String>, Error> {
+    let Some(feature_index) = feature_index(handle, device_index, DEVICE_NAME)? else {
+        return Ok(None);
+    };
+    let get_length = Request::new(device_index, feature_index, GET_NAME_LENGTH, &[]);
+    let length = call(handle, &get_length)?[0];
+    let mut name = Vec::with_capacity(length.into());
+    for offset in (0..length).step_by(size_of::<Params>()) {
+        let get_name = Request::new(device_index, feature_index, GET_NAME, &[offset]);
+        let chunk = call(handle, &get_name)?;
+        name.extend_from_slice(&chunk[..chunk.len().min(usize::from(length - offset))]);
+    }
+    Ok(Some(
+        String::from_utf8_lossy(&name)
+            .trim_end_matches('\0')
+            .to_owned(),
+    ))
+}
+
+/// The Easy-Switch hosts of the device at `device_index` behind `handle`, or
+/// `None` if it cannot switch.
+pub fn hosts(handle: &impl Handle, device_index: u8) -> Result<Option<Hosts>, Error> {
+    let Some(feature_index) = feature_index(handle, device_index, CHANGE_HOST)? else {
+        return Ok(None);
+    };
+    let get_host_info = Request::new(device_index, feature_index, GET_HOST_INFO, &[]);
+    let [count, current, ..] = call(handle, &get_host_info)?;
+    Ok(Some(Hosts { count, current }))
+}
+
+/// Where the device has `feature`, or `None` if it lacks it.
+fn feature_index(
+    handle: &impl Handle,
+    device_index: u8,
+    feature: u16,
+) -> Result<Option<u8>, Error> {
+    let [high, low] = feature.to_be_bytes();
+    let get_feature = Request::new(device_index, IROOT, GET_FEATURE, &[high, low]);
+    Ok(match call(handle, &get_feature)?[0] {
+        0 => None,
+        index => Some(index),
+    })
 }
 
 /// Sends `request` until it is answered, and returns the reply's parameters.
@@ -422,6 +479,125 @@ mod tests {
     fn fails_when_writing_fails() {
         let (result, _) = change_host_with(Rc::new(|_| Err(io::Error::other("unplugged"))));
         assert_eq!(result.unwrap_err().to_string(), "unplugged");
+    }
+
+    const DEVICE_NAME_INDEX: u8 = 0x03;
+
+    /// A device with DeviceName at `feature_index` that is called `name`.
+    fn named(feature_index: u8, name: &'static [u8]) -> Responder {
+        named_with_length(feature_index, name, u8::try_from(name.len()).unwrap())
+    }
+
+    /// Like `named`, but claiming the name is `length` bytes long.
+    fn named_with_length(feature_index: u8, name: &'static [u8], length: u8) -> Responder {
+        Rc::new(move |request| {
+            Ok(match [request[2], request[3], request[4]] {
+                [0x00, 0x0A, 0x00] => vec![report(&[0x11, INDEX, 0x00, 0x0A, feature_index])],
+                [DEVICE_NAME_INDEX, 0x0A, _] => {
+                    vec![report(&[0x11, INDEX, DEVICE_NAME_INDEX, 0x0A, length])]
+                }
+                [_, _, offset] => {
+                    let chunk = &name[usize::from(offset)..name.len().min(offset as usize + 16)];
+                    vec![report(
+                        &[&[0x11, INDEX, DEVICE_NAME_INDEX, 0x1A], chunk].concat(),
+                    )]
+                }
+            })
+        })
+    }
+
+    fn name_of(responder: Responder) -> (Result<Option<String>, Error>, Vec<Vec<u8>>) {
+        let writes = WriteLog::default();
+        let handle = FakeHandle::new(0xB034, responder, writes.clone());
+        let result = device_name(&handle, INDEX);
+        let written = writes.take().into_iter().map(|(_, r)| r).collect();
+        (result, written)
+    }
+
+    #[test]
+    fn reads_the_name_in_chunks() {
+        let (name, written) = name_of(named(DEVICE_NAME_INDEX, b"MX Master 3S Mouse"));
+        assert_eq!(name.unwrap().as_deref(), Some("MX Master 3S Mouse"));
+        assert_eq!(
+            written,
+            [
+                report(&[0x11, INDEX, 0x00, 0x0A, 0x00, 0x05]),
+                report(&[0x11, INDEX, DEVICE_NAME_INDEX, 0x0A]),
+                report(&[0x11, INDEX, DEVICE_NAME_INDEX, 0x1A, 0]),
+                report(&[0x11, INDEX, DEVICE_NAME_INDEX, 0x1A, 16]),
+            ]
+        );
+    }
+
+    #[test]
+    fn reads_a_name_that_fits_one_chunk() {
+        let (name, written) = name_of(named(DEVICE_NAME_INDEX, b"MX Keys S"));
+        assert_eq!(name.unwrap().as_deref(), Some("MX Keys S"));
+        assert_eq!(written.len(), 3);
+    }
+
+    #[test]
+    fn stops_the_name_at_its_length() {
+        let (name, _) = name_of(named_with_length(
+            DEVICE_NAME_INDEX,
+            b"MX Master 3S Mouse 2",
+            18,
+        ));
+        assert_eq!(name.unwrap().as_deref(), Some("MX Master 3S Mouse"));
+    }
+
+    #[test]
+    fn trims_padding_from_the_name() {
+        let (name, _) = name_of(named(DEVICE_NAME_INDEX, b"MX Keys\0\0"));
+        assert_eq!(name.unwrap().as_deref(), Some("MX Keys"));
+    }
+
+    #[test]
+    fn has_no_name_without_device_name() {
+        let (name, written) = name_of(named(0, b"MX Keys S"));
+        assert_eq!(name.unwrap(), None);
+        assert_eq!(written.len(), 1);
+    }
+
+    #[test]
+    fn fails_the_name_without_a_reply() {
+        assert!(matches!(name_of(silent()).0, Err(Error::NoReply)));
+    }
+
+    /// A device with ChangeHost at `feature_index`, on host 2 of 3.
+    fn with_hosts(feature_index: u8) -> Responder {
+        Rc::new(move |request| {
+            Ok(match request[2..4] {
+                [0x00, 0x0A] => vec![report(&[0x11, INDEX, 0x00, 0x0A, feature_index])],
+                _ => vec![report(&[0x11, INDEX, CHANGE_HOST_INDEX, 0x0A, 3, 1])],
+            })
+        })
+    }
+
+    fn hosts_of(responder: Responder) -> Result<Option<Hosts>, Error> {
+        let handle = FakeHandle::new(0xB034, responder, WriteLog::default());
+        hosts(&handle, INDEX)
+    }
+
+    #[test]
+    fn reads_the_hosts() {
+        assert_eq!(
+            hosts_of(with_hosts(CHANGE_HOST_INDEX)).unwrap(),
+            Some(Hosts {
+                count: 3,
+                current: 1
+            })
+        );
+    }
+
+    #[test]
+    fn has_no_hosts_without_change_host() {
+        assert_eq!(hosts_of(with_hosts(0)).unwrap(), None);
+    }
+
+    #[test]
+    fn fails_the_hosts_without_a_reply() {
+        assert!(matches!(hosts_of(silent()), Err(Error::NoReply)));
     }
 
     #[test]

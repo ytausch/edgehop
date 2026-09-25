@@ -16,8 +16,8 @@ cooldown_ms = 2000
 [edges]
 right = 1
 
-# Switched in the order listed. `edgehop --list` shows the values of the
-# connected devices; pick each device's HID++ interface.
+# Switched in the order listed. `edgehop --list` prints these entries for the
+# connected devices, ready to paste.
 #
 # Over Bluetooth, the HID++ interface is usage page 0xFF43, usage 0x0202, and
 # the device index is 0xFF. These are an MX Keys S and an MX Master 3S:
@@ -44,7 +44,7 @@ device_index = 0xFF
 # [[devices]]
 # name = "MX Keys S"
 # vendor_id = 0x046D
-# product_id = <the receiver's, from `edgehop --list`>
+# product_id = <the receiver's>
 # usage_page = 0xFF00
 # usage = 0x0002
 # device_index = <the keyboard's slot>

@@ -7,7 +7,7 @@ use log::{LevelFilter, info};
 use edgehop::{
     cli::{Cli, Mode},
     config::{Channel, Config},
-    hid, switch,
+    discover, switch,
     watch::{POLL_INTERVAL, Watcher},
 };
 
@@ -46,13 +46,7 @@ fn load_config(path: Option<PathBuf>) -> Result<Config> {
 }
 
 fn list(hid: &mut sys::HidApi) -> Result<()> {
-    let interfaces = hid::logitech_interfaces(hid)?;
-    if interfaces.is_empty() {
-        println!("No Logitech HID interfaces found.");
-    }
-    for interface in interfaces {
-        println!("{interface}");
-    }
+    print!("{}", discover::report(&discover::discover(hid)?));
     Ok(())
 }
 

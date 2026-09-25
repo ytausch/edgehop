@@ -8,6 +8,7 @@
 pub mod cli;
 pub mod config;
 pub mod desktop;
+pub mod discover;
 pub mod hid;
 pub mod hidpp;
 pub mod switch;

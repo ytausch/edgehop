@@ -32,7 +32,7 @@ struct ModeArgs {
     #[arg(long)]
     watch: bool,
 
-    /// List the HID interfaces of connected Logitech devices.
+    /// List the connected Logitech devices, as entries for the config.
     #[arg(long)]
     list: bool,
 

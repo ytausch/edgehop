@@ -32,6 +32,7 @@ The code is split so that as much as possible can be tested without hardware:
   - `trigger`: the dwell/cooldown state machine
   - `hidpp`: the HID++ protocol
   - `switch`: switching all devices
+  - `discover`: finding the connected devices for `--list`
   - `watch`: the watch loop's decisions
 - **Binary (`src/main.rs` and `src/sys/`):** the thin platform glue. `sys/hid.rs` wraps hidapi, and `sys/macos.rs` and `sys/windows.rs` read the cursor and displays. This is the only code the coverage and mutation checks exclude.
 
