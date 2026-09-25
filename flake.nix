@@ -30,17 +30,5 @@
           };
         };
       });
-
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          inputsFrom = [ self.packages.${pkgs.stdenv.hostPlatform.system}.edgehop ];
-          packages = [
-            pkgs.clippy
-            pkgs.rustfmt
-          ];
-        };
-      });
-
-      formatter = forAllSystems (pkgs: pkgs.nixfmt);
     };
 }
