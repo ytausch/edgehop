@@ -1,0 +1,40 @@
+[package]
+name = "edgehop"
+version = "0.1.0"
+edition = "2024"
+description = "Switch Logitech Easy-Switch devices when the cursor hits a screen edge"
+license = "MIT"
+repository = "https://github.com/ytausch/edgehop"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.7", features = ["derive"] }
+env_logger = { version = "0.11.11", default-features = false, features = [
+  "humantime",
+] }
+hidapi = { version = "2.6.7", default-features = false, features = [
+  "macos-shared-device",
+] }
+log = "0.4.34"
+serde = { version = "1.0.229", features = ["derive"] }
+thiserror = "2.0.21"
+toml = "1.1.6"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = "0.25.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_UI_HiDpi",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
