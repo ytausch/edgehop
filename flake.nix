@@ -18,7 +18,18 @@
         edgehop = pkgs.rustPlatform.buildRustPackage {
           pname = cargoToml.package.name;
           inherit (cargoToml.package) version;
-          src = nixpkgs.lib.cleanSource ./.;
+          # Only the files the build reads, so that changes to docs or CI keep
+          # the store path, and with it the Input Monitoring grant.
+          src = nixpkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = nixpkgs.lib.fileset.unions [
+              ./.cargo
+              ./Cargo.lock
+              ./Cargo.toml
+              ./config.example.toml
+              ./src
+            ];
+          };
           cargoLock.lockFile = ./Cargo.lock;
 
           meta = {
