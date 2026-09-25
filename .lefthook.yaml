@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/evilmartians/lefthook/refs/heads/master/schema.json
+output: [summary]
+templates:
+  run: run --quiet --no-progress
+no_auto_install: true
+pre-commit:
+  fail_on_changes: always
+  jobs:
+    - name: pixi-install
+      run: pixi install --quiet --no-progress
+    - group:
+        parallel: true
+        jobs:
+          # QuantCo default
+          - name: prettier
+            glob: "*.{md,yml,yaml}"
+            run: pixi {run} prettier --write --no-error-on-unmatched-pattern --list-different --ignore-unknown {staged_files}
+            env:
+              CI: "1"
+          - name: taplo
+            glob: "*.toml"
+            run: pixi {run} taplo format {staged_files}
+          - name: trailing-whitespace-fixer
+            glob: "*"
+            file_types: text
+            run: pixi {run} trailing-whitespace-fixer {staged_files}
+          - name: end-of-file-fixer
+            glob: "*"
+            file_types: text
+            run: pixi {run} end-of-file-fixer {staged_files}
+          - name: check-merge-conflict
+            glob: "*"
+            file_types: text
+            run: pixi {run} check-merge-conflict --assume-in-merge {staged_files}
+          - name: typos
+            glob: "*"
+            file_types: text
+            run: pixi {run} typos --force-exclude {staged_files}
+          - name: zizmor
+            glob: "*.{yml,yaml}"
+            run: pixi {run} zizmor --min-severity high --fix --offline .
+          # cargo fmt and clippy
+          - name: cargo-fmt
+            glob: "*.rs"
+            run: cargo fmt -- {staged_files}
+          - name: cargo-clippy
+            glob: "*.rs"
+            run: cargo clippy --all-targets --all-features --workspace -- -D warnings
