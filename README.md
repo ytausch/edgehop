@@ -60,3 +60,7 @@ Add `--verbose` to log every step.
 ## 🛠️ Development
 
 See [development](docs/development.md) for building from source, running the tests, and the code layout.
+
+---
+
+<sub>edgehop is an independent project and is not affiliated with, endorsed by, or sponsored by Logitech. Logitech and related product names are trademarks of Logitech or their respective owners.</sub>
