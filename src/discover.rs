@@ -121,7 +121,12 @@ fn receiver(hid: &mut impl Hid, interface: &Interface, interfaces: &[Interface])
         failed
             .into_iter()
             .map(|(reason, slots)| Entry::Unreachable {
-                what: format!("{} slots {}", describe(interface), slots.join(", ")),
+                what: format!(
+                    "{} {} {}",
+                    describe(interface),
+                    if slots.len() == 1 { "slot" } else { "slots" },
+                    slots.join(", ")
+                ),
                 reason: format!(
                     "{reason}. If a device is paired there, press a key on it to wake it, \
              and list again."
@@ -345,7 +350,8 @@ mod tests {
     #[test]
     fn groups_the_slots_that_do_not_answer_by_why() {
         let responder = devices(vec![(2, "MX Keys S", Some([3, 0]))], |slot| match slot {
-            1 | 3 => Some(0x09),
+            1 => Some(0x09),
+            3 => Some(hidpp::UNKNOWN_DEVICE),
             4 => Some(hidpp::UNKNOWN_DEVICE),
             _ => None,
         });
@@ -356,7 +362,7 @@ mod tests {
             entries[1..],
             [
                 Entry::Unreachable {
-                    what: "Device C548 (0xC548) slots 1, 3".into(),
+                    what: "Device C548 (0xC548) slot 1".into(),
                     reason: "device is not reachable (asleep, out of range, or on another host). \
                              If a device is paired there, press a key on it to wake it, and list \
                              again."
