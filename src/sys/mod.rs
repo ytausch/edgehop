@@ -16,7 +16,7 @@ pub use macos::{Desktop, config_dir};
 #[cfg(target_os = "windows")]
 mod windows;
 #[cfg(target_os = "windows")]
-pub use windows::{Desktop, config_dir, hide_console};
+pub use windows::{Desktop, config_dir};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 compile_error!("edgehop supports only macOS and Windows");

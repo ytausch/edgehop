@@ -4,12 +4,12 @@ fn main() {
 
     #[cfg(windows)]
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
-        icon::embed_icon();
+        resources::embed();
     }
 }
 
 #[cfg(windows)]
-mod icon {
+mod resources {
     use std::env;
     use std::fs::{self, File};
     use std::path::PathBuf;
@@ -23,9 +23,22 @@ mod icon {
         ("assets/icon.svg", &[32, 40, 48, 64, 256]),
     ];
 
-    /// Render the SVGs into an .ico, and embed it as the icon that Explorer and
-    /// the taskbar show for edgehop.exe.
-    pub fn embed_icon() {
+    // Without this, Windows opens a console for edgehop whenever it isn't
+    // started from one, such as at login. From a terminal, edgehop still uses
+    // the terminal's console. Needs Windows 11 24H2; older versions ignore it.
+    const MANIFEST: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <application>
+    <windowsSettings>
+      <consoleAllocationPolicy xmlns="http://schemas.microsoft.com/SMI/2024/WindowsSettings">detached</consoleAllocationPolicy>
+    </windowsSettings>
+  </application>
+</assembly>
+"#;
+
+    /// Embed the manifest, and the SVGs rendered into an .ico as the icon that
+    /// Explorer and the taskbar show for edgehop.exe.
+    pub fn embed() {
         let mut icon = ico::IconDir::new(ico::ResourceType::Icon);
         for (svg, sizes) in ICONS {
             let data = fs::read(svg).expect("failed to read the icon");
@@ -43,8 +56,9 @@ mod icon {
             .expect("failed to write the icon");
         winresource::WindowsResource::new()
             .set_icon(path.to_str().unwrap())
+            .set_manifest(MANIFEST)
             .compile()
-            .expect("failed to embed the icon");
+            .expect("failed to embed the resources");
     }
 
     fn render(tree: &Tree, size: u32) -> Vec<u8> {

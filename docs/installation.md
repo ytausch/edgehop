@@ -43,31 +43,34 @@ If Smart App Control is on (Windows 11), it blocks unsigned binaries however you
 
 ## Start at login
 
-Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it isn't on your `PATH`, replace that lookup with the binary's full path.
+Neither setup needs admin rights.
 
 ### Windows
 
-Register a scheduled task that starts edgehop at login. Its console window is hidden once edgehop has loaded its config, so edgehop runs without a taskbar button. In PowerShell:
+Register a scheduled task that starts edgehop at login. It runs without a window or taskbar button. This needs Windows 11 24H2 or later; on older versions, a console window stays open while edgehop runs. In PowerShell:
 
 ```powershell
-$action = New-ScheduledTaskAction -Execute (Get-Command edgehop).Source -Argument "--watch --hide-console"
+$edgehop = "$env:USERPROFILE\.pixi\envs\edgehop\Library\bin\edgehop.exe"
+$action = New-ScheduledTaskAction -Execute $edgehop -Argument "--watch"
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
   -ExecutionTimeLimit ([TimeSpan]::Zero)
 Register-ScheduledTask -TaskName edgehop -Action $action -Trigger $trigger -Settings $settings
 ```
 
+With pixi, the task has to start this binary: the `edgehop.exe` in `%USERPROFILE%\.pixi\bin` is only a launcher, and it opens a console window of its own. For a downloaded binary, set `$edgehop` to its path instead.
+
 The settings keep the task running: by default, Task Scheduler doesn't start a task on battery, stops it when the computer is unplugged, and ends it after three days.
 
-Or by hand: open Task Scheduler and choose **Create Task**. Under **Triggers**, add one that begins **At log on** for your user. Under **Actions**, start `edgehop.exe` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`) with the arguments `--watch --hide-console`. Under **Conditions**, clear **Start the task only if the computer is on AC power**, and under **Settings**, clear **Stop the task if it runs longer than**.
+Or by hand: open Task Scheduler and choose **Create Task**. Under **Triggers**, add one that begins **At log on** for your user. Under **Actions**, start `edgehop.exe` (with pixi, `%USERPROFILE%\.pixi\envs\edgehop\Library\bin\edgehop.exe`) with the argument `--watch`. Under **Conditions**, clear **Start the task only if the computer is on AC power**, and under **Settings**, clear **Stop the task if it runs longer than**.
 
 Run `Start-ScheduledTask edgehop` to start it without logging out.
 
-With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
+Without a window, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, stop edgehop and run `edgehop --watch` in a terminal.
 
 ### macOS
 
-Install a LaunchAgent. launchd starts it at login, restarts it if it exits, and writes its log to `~/Library/Logs/edgehop.log`:
+Install a LaunchAgent. It picks up edgehop from your `PATH`; if it isn't on your `PATH`, replace `$(command -v edgehop)` with the binary's full path. launchd starts it at login, restarts it if it exits, and writes its log to `~/Library/Logs/edgehop.log`:
 
 ```shell
 cat > ~/Library/LaunchAgents/io.github.ytausch.edgehop.plist <<EOF

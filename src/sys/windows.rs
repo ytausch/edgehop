@@ -9,14 +9,13 @@
 use std::{env, path::PathBuf};
 
 use anyhow::{Context, Result};
-use log::{info, warn};
+use log::warn;
 use windows::Win32::{
     Foundation::POINT,
     Graphics::Gdi::{MONITOR_DEFAULTTONULL, MonitorFromPoint},
-    System::Console::GetConsoleWindow,
     UI::{
         HiDpi::{DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext},
-        WindowsAndMessaging::{GetCursorPos, SW_HIDE, ShowWindow},
+        WindowsAndMessaging::GetCursorPos,
     },
 };
 
@@ -58,18 +57,4 @@ pub fn config_dir() -> Result<PathBuf> {
     env::var_os("APPDATA")
         .map(PathBuf::from)
         .context("APPDATA is not set")
-}
-
-/// Hides the console window, and with it its taskbar button.
-pub fn hide_console() {
-    // SAFETY: plain Win32 call without pointers.
-    let window = unsafe { GetConsoleWindow() };
-    if window.is_invalid() {
-        warn!("cannot hide the console: there is no console window");
-        return;
-    }
-    info!("hiding the console window");
-    // SAFETY: `window` is the console window. The return value is only whether
-    // the window was visible before.
-    let _ = unsafe { ShowWindow(window, SW_HIDE) };
 }
