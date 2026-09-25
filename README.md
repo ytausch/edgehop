@@ -26,7 +26,13 @@ See [how it works](docs/how-it-works.md) for the details.
 
 ## 💿 Installation
 
-Download the binary for your platform from the [latest release](https://github.com/ytausch/edgehop/releases). See [installation](docs/installation.md) for the macOS quarantine flag and for starting edgehop at login.
+Install edgehop with [pixi](https://pixi.sh):
+
+```shell
+pixi global install edgehop
+```
+
+Or download the binary for your platform from the [latest release](https://github.com/ytausch/edgehop/releases). See [installation](docs/installation.md) for the macOS quarantine flag and for starting edgehop at login.
 
 ## ⚙️ Configuration
 
