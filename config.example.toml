@@ -1,0 +1,50 @@
+# Example edgehop config. Copy it to
+#   Windows: %APPDATA%\edgehop\config.toml
+#   macOS:   ~/Library/Application Support/edgehop/config.toml
+# or pass its path with --config. Each computer gets its own copy, with the
+# edges and devices as seen from that computer.
+
+# How long the cursor has to rest against an edge before switching.
+dwell_ms = 250
+# How long after a switch the next one may start at the earliest. The cursor
+# also has to move 50 px away from the edge first.
+cooldown_ms = 2000
+
+# The Easy-Switch channel (1-3) each outer edge of the desktop switches to.
+# Leave an edge out to do nothing there. Here: the other computer, on
+# channel 1, is to the right of this one.
+[edges]
+right = 1
+
+# Switched in the order listed. `edgehop --list` shows the values of the
+# connected devices; pick each device's HID++ interface.
+#
+# Over Bluetooth, the HID++ interface is usage page 0xFF43, usage 0x0202, and
+# the device index is 0xFF. These are an MX Keys S and an MX Master 3S:
+[[devices]]
+name = "MX Keys S"
+vendor_id = 0x046D
+product_id = 0xB378
+usage_page = 0xFF43
+usage = 0x0202
+device_index = 0xFF
+
+[[devices]]
+name = "MX Master 3S"
+vendor_id = 0x046D
+product_id = 0xB034
+usage_page = 0xFF43
+usage = 0x0202
+device_index = 0xFF
+
+# Behind a Logi Bolt or Unifying receiver, all devices share the receiver's
+# HID++ interface (usage page 0xFF00, usage 0x0002): product_id is the
+# receiver's, and device_index is the device's slot on it (1-6).
+#
+# [[devices]]
+# name = "MX Keys S"
+# vendor_id = 0x046D
+# product_id = <the receiver's, from `edgehop --list`>
+# usage_page = 0xFF00
+# usage = 0x0002
+# device_index = <the keyboard's slot>

@@ -1,0 +1,6 @@
+/target
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+/mutants.out*

@@ -1,0 +1,30 @@
+[workspace]
+name = "edgehop"
+channels = ["conda-forge"]
+exclude-newer = "7d"
+platforms = ["osx-arm64", "win-64"]
+
+[dependencies]
+cargo-llvm-cov = "*"
+cargo-mutants = "*"
+
+[tasks]
+# The OS glue in src/main.rs and src/sys/ needs real hardware and is kept thin;
+# everything else must be covered completely.
+coverage = "cargo llvm-cov --ignore-filename-regex 'src[/\\\\](main\\.rs|sys[/\\\\])' --show-missing-lines --fail-under-lines 100"
+mutants = "cargo mutants --gitignore=true"
+
+[feature.lint.dependencies]
+lefthook = "*"
+prettier = "*"
+taplo = "*"
+pre-commit-hooks = "*"
+typos = "*"
+zizmor = "*"
+
+[feature.lint.tasks]
+pre-commit-install = "lefthook install"
+lint = "lefthook run pre-commit --all-files"
+
+[environments]
+default = ["lint"]

@@ -1,0 +1,3 @@
+# The OS glue is only reachable with real hardware, so the tests do not
+# cover it; see the coverage task in pixi.toml.
+exclude_globs = ["src/main.rs", "src/sys/**"]
