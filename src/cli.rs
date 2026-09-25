@@ -23,12 +23,6 @@ pub struct Cli {
     /// Windows and ~/Library/Application Support/edgehop/config.toml on macOS.
     #[arg(long, value_name = "PATH")]
     pub config: Option<PathBuf>,
-
-    /// Hide the console window, and with it the taskbar button, while
-    /// watching. For starting at login; in a terminal, this hides the terminal.
-    #[cfg(target_os = "windows")]
-    #[arg(long, conflicts_with_all = ["list", "switch"])]
-    pub hide_console: bool,
 }
 
 #[derive(Debug, Args)]
@@ -110,23 +104,6 @@ mod tests {
         );
         assert_eq!(
             parse(&["--watch", "--list"]).unwrap_err().kind(),
-            ErrorKind::ArgumentConflict
-        );
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn hides_the_console_only_when_watching() {
-        assert!(parse(&["--watch", "--hide-console"]).unwrap().hide_console);
-        assert!(!parse(&["--watch"]).unwrap().hide_console);
-        assert_eq!(
-            parse(&["--list", "--hide-console"]).unwrap_err().kind(),
-            ErrorKind::ArgumentConflict
-        );
-        assert_eq!(
-            parse(&["--switch", "2", "--hide-console"])
-                .unwrap_err()
-                .kind(),
             ErrorKind::ArgumentConflict
         );
     }
