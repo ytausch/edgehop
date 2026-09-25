@@ -26,3 +26,13 @@ updates:
       prefix: build
     labels:
       - dependencies
+  # Every nixpkgs bump changes the Nix-built binary, and macOS then asks for
+  # the Input Monitoring grant again. The compiler is all nixpkgs provides.
+  - package-ecosystem: nix
+    directory: /
+    schedule:
+      interval: yearly
+    commit-message:
+      prefix: build
+    labels:
+      - dependencies
