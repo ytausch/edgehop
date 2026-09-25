@@ -60,8 +60,6 @@ $shortcut.Save()
 
 Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch --hide-console` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
 
-Both need **Windows Console Host** as the default terminal, under Settings → System → For developers → Terminal, or in Windows Terminal under Settings → Startup → Default terminal application. Windows Terminal ignores the **Minimized** setting, and `--hide-console` can't hide its window. The default applies to all console programs, not just edgehop.
-
 With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
 
 ### macOS

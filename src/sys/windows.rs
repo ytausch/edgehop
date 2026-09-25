@@ -60,9 +60,7 @@ pub fn config_dir() -> Result<PathBuf> {
         .context("APPDATA is not set")
 }
 
-/// Hides the console window, and with it its taskbar button. This only works
-/// when Windows Console Host is the default terminal: Windows Terminal hosts
-/// the console in a window of its own, which this cannot reach.
+/// Hides the console window, and with it its taskbar button.
 pub fn hide_console() {
     // SAFETY: plain Win32 call without pointers.
     let window = unsafe { GetConsoleWindow() };
