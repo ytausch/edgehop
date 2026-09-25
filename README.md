@@ -21,8 +21,10 @@ Logitech's Easy-Switch devices pair with up to three computers, but switching me
 
 - 🖥️ Works with one monitor showing both computers side by side (picture-by-picture, PBP) as well as with a separate monitor per computer. With PBP, the edge between the two halves is where you hop.
 - 💻 Runs on Windows 10/11 (x64) and macOS on Apple Silicon.
-- 📦 A single binary: no admin rights, installer, or runtime needed.
-- 🔌 No network: the same binary runs on every computer with its own config. The computers never talk to each other; the devices carry the switch.
+- 🪶 Much lighter than Logitech's own Flow feature in Logi Options+:
+  - 📦 A single static binary running as one small process: no installer or runtime.
+  - 🔓 Runs without admin rights.
+  - 🔌 Needs no network: the same binary runs on every computer with its own config. The computers never talk to each other; the devices carry the switch.
 
 See [how it works](docs/how-it-works.md) for the details.
 
