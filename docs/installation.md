@@ -61,7 +61,7 @@ The settings keep the task running: by default, Task Scheduler doesn't start a t
 
 Or by hand: open Task Scheduler and choose **Create Task**. Under **Triggers**, add one that begins **At log on** for your user. Under **Actions**, start `edgehop.exe` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`) with the arguments `--watch --hide-console`. Under **Conditions**, clear **Start the task only if the computer is on AC power**, and under **Settings**, clear **Stop the task if it runs longer than**.
 
-Run `Start-ScheduledTask edgehop` to start it without logging out, and `Unregister-ScheduledTask edgehop` to remove it.
+Run `Start-ScheduledTask edgehop` to start it without logging out.
 
 With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
 
@@ -112,3 +112,19 @@ Grant **Input Monitoring** under System Settings → Privacy & Security:
 - When running edgehop from a terminal, grant it to the terminal app.
 
 The grant belongs to that exact binary. After replacing it with a new version, for example through `pixi global update`, remove the old entry and add the binary again.
+
+## Stop starting at login
+
+On **Windows**, remove the scheduled task and stop edgehop:
+
+```powershell
+Unregister-ScheduledTask -TaskName edgehop -Confirm:$false
+Stop-Process -Name edgehop
+```
+
+On **macOS**, unload the LaunchAgent, which also stops edgehop, and delete it:
+
+```shell
+launchctl bootout gui/$(id -u)/io.github.ytausch.edgehop
+rm ~/Library/LaunchAgents/io.github.ytausch.edgehop.plist
+```
