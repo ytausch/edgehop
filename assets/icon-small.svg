@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- icon.svg without the cursor and with a thicker ring, for 24 px and below -->
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="#1e222e"/>
+  <path d="M128 40A88 88 0 0 0 128 216" fill="none" stroke="#58a6ff" stroke-width="44"/>
+  <path d="M128 40A88 88 0 0 1 128 216" fill="none" stroke="#ff9f43" stroke-width="44"/>
+</svg>

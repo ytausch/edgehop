@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The dwell ring from the demo, split between computer A (blue) and computer B (orange) -->
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#1e222e"/>
+  <path d="M128 58A70 70 0 0 0 128 198" fill="none" stroke="#58a6ff" stroke-width="26"/>
+  <path d="M128 58A70 70 0 0 1 128 198" fill="none" stroke="#ff9f43" stroke-width="26"/>
+  <!-- The cursor rests against the edge between the two -->
+  <path transform="translate(124 112) scale(.9)" d="M0 0V104L25 80L42 116L60 108L43 72H76Z" fill="#e8ecf4" stroke="#0c0e14" stroke-width="9" stroke-linejoin="round"/>
+</svg>
