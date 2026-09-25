@@ -32,7 +32,7 @@ Install edgehop with [pixi](https://pixi.sh):
 pixi global install edgehop
 ```
 
-Or download the binary for your platform from the [latest release](https://github.com/ytausch/edgehop/releases). See [installation](docs/installation.md) for the macOS quarantine flag and for starting edgehop at login.
+See [installation](docs/installation.md) for starting edgehop at login and for other ways to install it.
 
 ## ⚙️ Configuration
 
