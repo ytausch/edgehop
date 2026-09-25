@@ -31,7 +31,14 @@ fn main() -> Result<()> {
     match cli.mode() {
         Mode::List => list(&mut hid),
         Mode::Switch(channel) => switch(&load_config(cli.config)?, &mut hid, channel),
-        Mode::Watch => watch(&load_config(cli.config)?, &mut hid),
+        Mode::Watch => {
+            let config = load_config(cli.config)?;
+            #[cfg(target_os = "windows")]
+            if cli.hide_console {
+                sys::hide_console();
+            }
+            watch(&config, &mut hid)
+        }
     }
 }
 

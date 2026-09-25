@@ -47,20 +47,22 @@ Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it i
 
 ### Windows
 
-Create a shortcut in the Startup folder (`shell:startup`). The window starts minimized; its console shows the log. In PowerShell:
+Create a shortcut in the Startup folder (`shell:startup`). Its console window starts minimized and is hidden once edgehop has loaded its config, so edgehop runs without a taskbar button. In PowerShell:
 
 ```powershell
 $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(
   "$([Environment]::GetFolderPath('Startup'))\edgehop.lnk")
 $shortcut.TargetPath = (Get-Command edgehop).Source
-$shortcut.Arguments = "--watch"
+$shortcut.Arguments = "--watch --hide-console"
 $shortcut.WindowStyle = 7  # minimized
 $shortcut.Save()
 ```
 
-Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
+Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch --hide-console` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
 
-If the window still opens at login, Windows Terminal is your default terminal: it ignores the shortcut's **Minimized** setting. Switch the default to **Windows Console Host**, which honors it, under Settings → System → For developers → Terminal, or in Windows Terminal under Settings → Startup → Default terminal application. This applies to all console programs, not just edgehop.
+Both need **Windows Console Host** as the default terminal, under Settings → System → For developers → Terminal, or in Windows Terminal under Settings → Startup → Default terminal application. Windows Terminal ignores the **Minimized** setting, and `--hide-console` can't hide its window. The default applies to all console programs, not just edgehop.
+
+With the window hidden, the log isn't shown anywhere. To stop edgehop, end it in Task Manager or run `Stop-Process -Name edgehop`. To see the log, leave out `--hide-console`, or stop edgehop and run `edgehop --watch` in a terminal. Don't pass `--hide-console` in a terminal: it hides the terminal's window along with edgehop's.
 
 ### macOS
 
