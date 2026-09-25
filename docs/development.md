@@ -10,6 +10,8 @@ cargo build --release
 
 The binary lands in `target/release/`. On Windows, the C runtime is linked statically (see [`.cargo/config.toml`](../.cargo/config.toml)), so the `.exe` runs without the Visual C++ Redistributable.
 
+On Windows, [`build.rs`](../build.rs) renders the icon from [`assets/icon.svg`](../assets/icon.svg) into the `.exe`, using the simpler [`assets/icon-small.svg`](../assets/icon-small.svg) for 24 px and below.
+
 ## Tooling
 
 Development tools come from [pixi](https://pixi.sh):

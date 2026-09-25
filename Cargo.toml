@@ -32,6 +32,12 @@ windows = { version = "0.62.2", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 
+# The host, not the target: winresource needs the Windows SDK's rc.exe.
+[target.'cfg(windows)'.build-dependencies]
+ico = "0.5.0"
+resvg = { version = "0.48.1", default-features = false }
+winresource = "0.1.31"
+
 [dev-dependencies]
 tempfile = "3.27.0"
 

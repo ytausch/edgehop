@@ -24,6 +24,7 @@
             root = ./.;
             fileset = nixpkgs.lib.fileset.unions [
               ./.cargo
+              ./build.rs
               ./Cargo.lock
               ./Cargo.toml
               ./config.example.toml
