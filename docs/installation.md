@@ -11,6 +11,8 @@ xattr -d com.apple.quarantine ~/.local/bin/edgehop
 chmod +x ~/.local/bin/edgehop
 ```
 
+On **Windows**, put the downloaded binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`.
+
 On macOS, you can also install edgehop with [Nix](https://nixos.org):
 
 ```shell
@@ -25,11 +27,11 @@ If you don't use Nix, the recommended installation on macOS and Windows is via [
 pixi global install edgehop
 ```
 
-On **Windows**, put the binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`.
+This puts `edgehop` into `~/.pixi/bin` (`%USERPROFILE%\.pixi\bin` on Windows), or `$PIXI_HOME/bin` if you set `PIXI_HOME`.
 
 ## Start at login
 
-Neither setup needs admin rights.
+Neither setup needs admin rights. Both pick up edgehop from your `PATH`; if it isn't on your `PATH`, replace that lookup with the binary's full path.
 
 ### Windows
 
@@ -38,13 +40,13 @@ Create a shortcut in the Startup folder (`shell:startup`). The window starts min
 ```powershell
 $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut(
   "$([Environment]::GetFolderPath('Startup'))\edgehop.lnk")
-$shortcut.TargetPath = "$env:LOCALAPPDATA\Programs\edgehop\edgehop.exe"
+$shortcut.TargetPath = (Get-Command edgehop).Source
 $shortcut.Arguments = "--watch"
 $shortcut.WindowStyle = 7  # minimized
 $shortcut.Save()
 ```
 
-Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch`, and set **Run** to **Minimized** in its properties.
+Or by hand: press <kbd>Win</kbd>+<kbd>R</kbd>, run `shell:startup`, create a shortcut to `edgehop.exe --watch` (with pixi, `%USERPROFILE%\.pixi\bin\edgehop.exe`), and set **Run** to **Minimized** in its properties.
 
 ### macOS
 
@@ -60,7 +62,7 @@ cat > ~/Library/LaunchAgents/io.github.ytausch.edgehop.plist <<EOF
   <string>io.github.ytausch.edgehop</string>
   <key>ProgramArguments</key>
   <array>
-    <string>$HOME/.local/bin/edgehop</string>
+    <string>$(command -v edgehop)</string>
     <string>--watch</string>
   </array>
   <key>RunAtLoad</key>
@@ -83,7 +85,13 @@ Reading the cursor needs no permission. Opening a **keyboard's** HID++ interface
 
 Grant **Input Monitoring** under System Settings → Privacy & Security:
 
-- For the LaunchAgent, grant it to the binary itself. Click **+**, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>, and enter `~/.local/bin/edgehop`. Then restart the agent with `launchctl kickstart -k gui/$(id -u)/io.github.ytausch.edgehop`.
+- For the LaunchAgent, grant it to the binary itself. Click **+**, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>, and enter its path:
+  - pixi: `~/.pixi/envs/edgehop/bin/edgehop`. The `edgehop` in `~/.pixi/bin` is only a launcher that replaces itself with this binary, so macOS checks the grant against this one.
+  - Downloaded binary: `~/.local/bin/edgehop`.
+  - Nix: the store path that `readlink -f "$(command -v edgehop)"` prints.
+
+  Then restart the agent with `launchctl kickstart -k gui/$(id -u)/io.github.ytausch.edgehop`.
+
 - When running edgehop from a terminal, grant it to the terminal app.
 
-The grant belongs to that exact binary. After replacing it with a new version, remove the old entry and add the binary again.
+The grant belongs to that exact binary. After replacing it with a new version, for example through `pixi global update`, remove the old entry and add the binary again.
