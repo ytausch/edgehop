@@ -1,0 +1,30 @@
+# Categories for the release notes that GitHub generates when the Build workflow drafts a release.
+# The labels are assigned by the autolabeler in `release-drafter.yml`.
+changelog:
+  categories:
+    - title: ⚠️ Breaking Changes
+      labels: [breaking]
+    - title: ✨ New Features
+      labels: [enhancement]
+    - title: 🐞 Bug Fixes
+      labels: [fix]
+    - title: 🏎️ Performance Improvements
+      labels: [performance]
+    - title: 📚 Documentation
+      labels: [documentation]
+    - title: 🏗️ Testing
+      labels: [test]
+    - title: ⚙️ Automation
+      labels: [ci]
+    - title: 🛠 Builds
+      labels: [build]
+    - title: 💎 Code Style
+      labels: [style]
+    - title: 📦 Refactorings
+      labels: [refactor]
+    - title: ♻️ Chores
+      labels: [chore]
+    - title: 🗑 Reverts
+      labels: [revert]
+    - title: Other Changes
+      labels: ["*"]
