@@ -13,13 +13,14 @@
 
 Push the mouse cursor against an outer edge of the screen, and your Logitech keyboard and mouse switch to another computer.
 
-![A cursor rests at the edge of one monitor, and the keyboard and mouse switch to the computer next to it](.github/assets/demo.gif)
+![A monitor in picture-by-picture mode shows two computers; the cursor rests at the edge between them, and the keyboard and mouse switch to the other computer](.github/assets/demo.gif)
 
 ## 📖 Introduction
 
 Logitech's Easy-Switch devices pair with up to three computers, but switching means pressing a button on every device. edgehop does it for you: when the cursor rests against a configured edge of the desktop, it tells each device to switch to another Easy-Switch channel.
 
-- 🖥️ Runs on Windows 10/11 (x64) and macOS on Apple Silicon.
+- 🖥️ Works with one monitor showing both computers side by side (picture-by-picture, PBP) as well as with a separate monitor per computer. With PBP, the edge between the two halves is where you hop.
+- 💻 Runs on Windows 10/11 (x64) and macOS on Apple Silicon.
 - 📦 A single binary: no admin rights, installer, or runtime needed.
 - 🔌 No network: the same binary runs on every computer with its own config. The computers never talk to each other; the devices carry the switch.
 
