@@ -8,7 +8,7 @@ Install it with [pixi](https://pixi.sh), from [conda-forge](https://prefix.dev/c
 pixi global install edgehop
 ```
 
-This puts `edgehop` into `~/.pixi/bin` (`%USERPROFILE%\.pixi\bin` on Windows), or `$PIXI_HOME/bin` if you set `PIXI_HOME`. Update it with `pixi global update edgehop`.
+This puts `edgehop` on your `PATH`. Update it with `pixi global update edgehop`.
 
 ## Nix
 
