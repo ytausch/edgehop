@@ -1,6 +1,28 @@
 # Installation
 
-Download the binary for your platform from the [latest release](https://github.com/ytausch/edgehop/releases), or [build it yourself](development.md#build). edgehop needs no admin rights, installer, or runtime. It is a single binary with hidapi linked in statically.
+edgehop needs no admin rights, installer, or runtime. It is a single binary with hidapi linked in statically.
+
+Install it with [pixi](https://pixi.sh), from [conda-forge](https://prefix.dev/channels/conda-forge/packages/edgehop):
+
+```shell
+pixi global install edgehop
+```
+
+This puts `edgehop` on your `PATH`. Update it with `pixi global update edgehop`.
+
+## Nix
+
+If you manage your Mac with [Nix](https://nixos.org), install edgehop from its flake instead:
+
+```shell
+nix profile add github:ytausch/edgehop
+```
+
+Or add the flake to your nix-darwin or Home Manager configuration and use its `packages.aarch64-darwin.default`. Don't make its `nixpkgs` input follow yours: with its own locked nixpkgs, the binary and its store path only change when edgehop itself changes, so the [Input Monitoring](#input-monitoring) grant survives your own updates. Grant it to the store path, which `readlink -f "$(command -v edgehop)"` prints.
+
+## Download
+
+You can also download the binary for your platform from the [latest release](https://github.com/ytausch/edgehop/releases), or [build it yourself](development.md#build).
 
 On **macOS**, a downloaded binary is quarantined and Gatekeeper refuses to run it. Clear the flag and make it executable:
 
@@ -12,22 +34,6 @@ chmod +x ~/.local/bin/edgehop
 ```
 
 On **Windows**, put the downloaded binary somewhere permanent, for example `%LOCALAPPDATA%\Programs\edgehop\edgehop.exe`.
-
-On macOS, you can also install edgehop with [Nix](https://nixos.org):
-
-```shell
-nix profile add github:ytausch/edgehop
-```
-
-Or add the flake to your nix-darwin or Home Manager configuration and use its `packages.aarch64-darwin.default`. Don't make its `nixpkgs` input follow yours: with its own locked nixpkgs, the binary and its store path only change when edgehop itself changes, so the [Input Monitoring](#input-monitoring) grant survives your own updates. Grant it to the store path, which `readlink -f "$(command -v edgehop)"` prints.
-
-If you don't use Nix, the recommended installation on macOS and Windows is via [pixi](https://pixi.sh), from [conda-forge](https://prefix.dev/channels/conda-forge/packages/edgehop):
-
-```shell
-pixi global install edgehop
-```
-
-This puts `edgehop` into `~/.pixi/bin` (`%USERPROFILE%\.pixi\bin` on Windows), or `$PIXI_HOME/bin` if you set `PIXI_HOME`.
 
 ## Start at login
 
@@ -87,8 +93,8 @@ Grant **Input Monitoring** under System Settings → Privacy & Security:
 
 - For the LaunchAgent, grant it to the binary itself. Click **+**, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>, and enter its path:
   - pixi: `~/.pixi/envs/edgehop/bin/edgehop`. The `edgehop` in `~/.pixi/bin` is only a launcher that replaces itself with this binary, so macOS checks the grant against this one.
-  - Downloaded binary: `~/.local/bin/edgehop`.
   - Nix: the store path that `readlink -f "$(command -v edgehop)"` prints.
+  - Downloaded binary: `~/.local/bin/edgehop`.
 
   Then restart the agent with `launchctl kickstart -k gui/$(id -u)/io.github.ytausch.edgehop`.
 
