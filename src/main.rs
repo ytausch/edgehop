@@ -57,7 +57,7 @@ fn list(hid: &mut sys::HidApi) -> Result<()> {
 }
 
 fn switch(config: &Config, hid: &mut sys::HidApi, channel: Channel) -> Result<()> {
-    if !switch::switch_all(hid, &config.devices, channel) {
+    if !switch::switch_all(hid, &config.devices, channel).is_empty() {
         bail!("not every device switched to channel {channel}");
     }
     Ok(())
@@ -68,9 +68,7 @@ fn watch(config: &Config, hid: &mut sys::HidApi) -> Result<()> {
     let mut watcher = Watcher::new(config)?;
     info!("watching the cursor");
     loop {
-        if let Some(channel) = watcher.poll(&desktop, Instant::now()) {
-            switch::switch_all(hid, &config.devices, channel);
-        }
+        watcher.poll(&desktop, hid, Instant::now());
         thread::sleep(POLL_INTERVAL);
     }
 }

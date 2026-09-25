@@ -10,6 +10,13 @@
 //!
 //! A reply echoes the first four bytes. An error reply has feature index FF,
 //! followed by the request's feature index, function byte, and error code.
+//!
+//! A Unifying or Bolt receiver answers for a device it cannot reach with a
+//! HID++ 1.0 short report instead:
+//!
+//! ```text
+//! 10 <device index> 8F <feature index> <function byte> <error code> 00
+//! ```
 
 use std::{
     io,
@@ -23,6 +30,12 @@ use crate::hid::Handle;
 const REPORT_ID: u8 = 0x11;
 const REPORT_LEN: usize = 20;
 const ERROR_FEATURE_INDEX: u8 = 0xFF;
+const SHORT_REPORT_ID: u8 = 0x10;
+const RECEIVER_ERROR: u8 = 0x8F;
+/// The receiver's HID++ 1.0 error codes for a paired device it cannot reach
+/// right now, as Solaar reads them: connection request failed, and resource
+/// error.
+const UNREACHABLE: [u8; 2] = [0x04, 0x09];
 /// Tags our requests so their replies can be told apart; any nonzero value
 /// works.
 const SOFTWARE_ID: u8 = 0x0A;
@@ -50,6 +63,10 @@ pub enum Error {
     Unsupported,
     #[error("device returned HID++ error {0:#04X}")]
     Device(u8),
+    #[error("device is not reachable (asleep, out of range, or on another host)")]
+    Unreachable,
+    #[error("receiver returned HID++ 1.0 error {0:#04X}")]
+    Receiver(u8),
 }
 
 /// Tells the device at `device_index` behind `handle` to switch to the
@@ -68,8 +85,8 @@ pub fn change_host(handle: &impl Handle, device_index: u8, host: u8) -> Result<(
     // A device that switches drops its connection at once instead of
     // replying, so only an error reply means anything here.
     match await_reply(handle, &set_current_host, ERROR_TIMEOUT) {
-        Err(Error::Device(code)) => Err(Error::Device(code)),
-        _ => Ok(()),
+        Err(Error::Io(_)) | Ok(_) => Ok(()),
+        Err(e) => Err(e),
     }
 }
 
@@ -105,7 +122,7 @@ fn await_reply(
         }
         match request.reply(&report[..len]) {
             Reply::Success(params) => return Ok(Some(params)),
-            Reply::Error(code) => return Err(Error::Device(code)),
+            Reply::Error(error) => return Err(error),
             Reply::Unrelated => {}
         }
     }
@@ -117,7 +134,7 @@ struct Request([u8; REPORT_LEN]);
 
 enum Reply {
     Success(Params),
-    Error(u8),
+    Error(Error),
     Unrelated,
 }
 
@@ -141,7 +158,16 @@ impl Request {
             [REPORT_ID, d, ERROR_FEATURE_INDEX, f, g, code, ..]
                 if (d, f, g) == (device_index, feature_index, function) =>
             {
-                Reply::Error(code)
+                Reply::Error(Error::Device(code))
+            }
+            [SHORT_REPORT_ID, d, RECEIVER_ERROR, f, g, code, ..]
+                if (d, f, g) == (device_index, feature_index, function) =>
+            {
+                Reply::Error(if UNREACHABLE.contains(&code) {
+                    Error::Unreachable
+                } else {
+                    Error::Receiver(code)
+                })
             }
             [REPORT_ID, d, f, g, ref params @ ..]
                 if (d, f, g) == (device_index, feature_index, function) =>
@@ -155,7 +181,7 @@ impl Request {
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
+    use std::{cell::Cell, rc::Rc};
 
     use super::*;
     use crate::hid::fake::{FakeHandle, Responder, WriteLog, silent};
@@ -244,7 +270,7 @@ mod tests {
 
     #[test]
     fn resends_unanswered_requests() {
-        let attempts = Rc::new(std::cell::Cell::new(0));
+        let attempts = Rc::new(Cell::new(0));
         let counter = attempts.clone();
         let answer = device(CHANGE_HOST_INDEX, vec![]);
         let responder: Responder = Rc::new(move |request| {
@@ -311,6 +337,87 @@ mod tests {
         result.unwrap();
     }
 
+    /// A receiver's short error report for a request to the device at INDEX.
+    fn receiver_error(request: &[u8], code: u8) -> Vec<u8> {
+        vec![0x10, INDEX, 0x8F, request[2], request[3], code, 0x00]
+    }
+
+    #[test]
+    fn reports_unreachable_devices() {
+        for code in [0x04, 0x09] {
+            let responder: Responder =
+                Rc::new(move |request| Ok(vec![receiver_error(request, code)]));
+            let (result, written) = change_host_with(responder);
+            assert!(matches!(result, Err(Error::Unreachable)));
+            assert_eq!(written.len(), 1);
+        }
+    }
+
+    #[test]
+    fn reports_other_receiver_errors() {
+        let responder: Responder = Rc::new(|request| Ok(vec![receiver_error(request, 0x08)]));
+        let (result, _) = change_host_with(responder);
+        assert!(matches!(result, Err(Error::Receiver(0x08))));
+    }
+
+    #[test]
+    fn reports_receiver_errors_from_set_current_host() {
+        let error = receiver_error(&SET_HOST_PREFIX, 0x09);
+        let (result, _) = change_host_with(device(CHANGE_HOST_INDEX, vec![error]));
+        assert!(matches!(result, Err(Error::Unreachable)));
+    }
+
+    #[test]
+    fn skips_receiver_errors_for_other_requests() {
+        let responder: Responder = Rc::new(|request| {
+            Ok(if request[..6] == GET_FEATURE_REQUEST {
+                vec![
+                    vec![0x10, 0x01, 0x8F, 0x00, 0x0A, 0x09, 0x00], // another device
+                    vec![0x10, INDEX, 0x8F, 0x05, 0x0A, 0x09, 0x00], // another feature
+                    vec![0x10, INDEX, 0x8F, 0x00, 0x1A, 0x09, 0x00], // another function
+                    vec![0x10, INDEX, 0x41, 0x00, 0x0A, 0x09, 0x00], // not an error
+                    report(&[0x11, INDEX, 0x00, 0x0A, CHANGE_HOST_INDEX]),
+                ]
+            } else {
+                vec![]
+            })
+        });
+        let (result, _) = change_host_with(responder);
+        result.unwrap();
+    }
+
+    #[test]
+    fn ignores_read_errors_after_set_current_host() {
+        let writes = WriteLog::default();
+        let handle = Vanishing {
+            inner: FakeHandle::new(0xB378, device(CHANGE_HOST_INDEX, vec![]), writes.clone()),
+            reads: Cell::new(0),
+        };
+        change_host(&handle, INDEX, 1).unwrap();
+        assert_eq!(writes.take().len(), 2);
+    }
+
+    /// A handle whose reads fail after the first one, like a device that
+    /// dropped its connection when it switched.
+    struct Vanishing {
+        inner: FakeHandle,
+        reads: Cell<usize>,
+    }
+
+    impl Handle for Vanishing {
+        fn write(&self, report: &[u8]) -> io::Result<()> {
+            self.inner.write(report)
+        }
+
+        fn read(&self, buffer: &mut [u8], timeout: Duration) -> io::Result<usize> {
+            self.reads.set(self.reads.get() + 1);
+            if self.reads.get() > 1 {
+                return Err(io::Error::other("device gone"));
+            }
+            self.inner.read(buffer, timeout)
+        }
+    }
+
     #[test]
     fn fails_when_writing_fails() {
         let (result, _) = change_host_with(Rc::new(|_| Err(io::Error::other("unplugged"))));
@@ -327,6 +434,14 @@ mod tests {
         assert_eq!(
             Error::Device(0x05).to_string(),
             "device returned HID++ error 0x05"
+        );
+        assert_eq!(
+            Error::Unreachable.to_string(),
+            "device is not reachable (asleep, out of range, or on another host)"
+        );
+        assert_eq!(
+            Error::Receiver(0x08).to_string(),
+            "receiver returned HID++ 1.0 error 0x08"
         );
     }
 }
