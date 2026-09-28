@@ -1,0 +1,14 @@
+{{!-- Template for THIRD_PARTY_LICENSES.txt, which `edgehop --licenses` prints. --}}
+This edgehop binary may include the following software, depending on the
+platform and how it was built. Their licenses follow.
+{{#each licenses}}
+
+================================================================================
+{{{name}}}
+
+Used by:
+{{#each used_by}}
+- {{crate.name}} {{crate.version}}
+{{/each}}
+
+{{{text}}}{{/each}}

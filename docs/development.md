@@ -24,6 +24,10 @@ pixi run mutants             # mutation testing with cargo-mutants
 cargo test
 ```
 
+## Third-party licenses
+
+The release binaries include third-party code, including the C part of hidapi, so their licenses ship inside the binary: `edgehop --licenses` prints [`THIRD_PARTY_LICENSES.txt`](../THIRD_PARTY_LICENSES.txt). [cargo-about](https://github.com/EmbarkStudios/cargo-about) generates it from [`about.toml`](../about.toml) and [`about.hbs`](../about.hbs), and the pre-commit hook regenerates it whenever `Cargo.lock` changes, so CI fails if it is stale. Run `pixi run licenses` to regenerate it by hand. A dependency under a license that `about.toml` does not accept yet fails the hook.
+
 ## Code layout
 
 The code is split so that as much as possible can be tested without hardware:

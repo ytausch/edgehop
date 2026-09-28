@@ -59,6 +59,7 @@ Run `edgehop --list` to get the `[[devices]]` entries of your connected devices,
 edgehop --watch        # switch whenever the cursor rests at a configured edge
 edgehop --switch 1     # switch every configured device to channel 1 once, and exit
 edgehop --list         # list the connected Logitech devices as config entries
+edgehop --licenses     # print the licenses of the third-party software in edgehop
 ```
 
 Add `--verbose` to log every step.

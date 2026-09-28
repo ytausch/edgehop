@@ -29,6 +29,7 @@
               ./Cargo.toml
               ./config.example.toml
               ./src
+              ./THIRD_PARTY_LICENSES.txt
             ];
           };
           cargoLock.lockFile = ./Cargo.lock;
