@@ -2,7 +2,7 @@ name: Update lockfiles
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 5 1 * *
+    - cron: 43 4 1 * *
 
 permissions:
   contents: read
