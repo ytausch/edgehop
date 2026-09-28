@@ -51,6 +51,9 @@ jobs:
       - name: Install Rust Toolchain
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+
       - name: Rust cache
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
@@ -59,8 +62,10 @@ jobs:
 
       - name: Build
         shell: bash
+        # cargo-auditable embeds the dependency tree into the binary, so it can
+        # be audited with e.g. `cargo audit bin`.
         run: |
-          cargo build --profile release --color always --target ${{ matrix.target }}
+          pixi run cargo auditable build --profile release --color always --target ${{ matrix.target }}
           mv target/${{ matrix.target }}/release/${{ matrix.binary }} ${{ matrix.asset }}
 
       - name: Upload Artifact
