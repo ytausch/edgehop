@@ -38,6 +38,10 @@ jobs:
             os: windows-latest
             binary: edgehop.exe
             asset: edgehop-x86_64-pc-windows-msvc.exe
+          - target: aarch64-pc-windows-msvc
+            os: windows-11-arm
+            binary: edgehop.exe
+            asset: edgehop-aarch64-pc-windows-msvc.exe
           - target: aarch64-apple-darwin
             os: macos-latest
             binary: edgehop

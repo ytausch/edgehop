@@ -16,7 +16,7 @@ Push the mouse cursor against an outer edge of the screen, and your Logitech key
 Logitech's Easy-Switch devices pair with up to three computers, but switching means pressing a button on every device. edgehop does it for you: when the cursor rests against a configured edge of the desktop, it tells each device to switch to another Easy-Switch channel.
 
 - 🖥️ Works with one monitor showing both computers side by side (picture-by-picture, PBP) as well as with a separate monitor per computer. With PBP, the edge between the two halves is where you hop.
-- 💻 Runs on Windows 10/11 (x64) and macOS on Apple Silicon.
+- 💻 Runs on Windows 10/11 (x64 and Arm64) and macOS on Apple Silicon.
 - 🪶 Much lighter than Logitech's own Flow feature in Logi Options+:
   - 📦 A single static binary running as one small process: no installer or runtime.
   - 🔓 Runs without admin rights.
