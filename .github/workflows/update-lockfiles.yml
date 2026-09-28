@@ -15,9 +15,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    env:
-      BRANCH: update-pixi
-      TITLE: "chore: Update pixi lockfile"
     steps:
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -29,29 +26,15 @@ jobs:
           run-install: false
       - name: Update lockfile
         run: pixi update --json --no-install | pixi exec pixi-diff-to-markdown > "$RUNNER_TEMP/diff.md"
-      - name: Create or update pull request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
-          if git diff --quiet -- pixi.lock; then
-            echo "pixi.lock is up to date."
-            if [ -n "$pr" ]; then
-              gh pr close "$pr" --delete-branch --comment "pixi.lock is up to date on main."
-            fi
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch --create "$BRANCH"
-          git commit --message "$TITLE" -- pixi.lock
-          gh auth setup-git
-          git push --force origin "$BRANCH"
-
-          if [ -n "$pr" ]; then
-            gh pr edit "$pr" --body-file "$RUNNER_TEMP/diff.md"
-          else
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" \
-              --body-file "$RUNNER_TEMP/diff.md" --label dependencies
-          fi
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore: Update pixi lockfile"
+          title: "chore: Update pixi lockfile"
+          body-path: ${{ runner.temp }}/diff.md
+          branch: update-pixi
+          base: main
+          labels: dependencies
+          delete-branch: true
+          add-paths: pixi.lock
