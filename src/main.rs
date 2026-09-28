@@ -5,6 +5,7 @@ use clap::Parser;
 use log::{LevelFilter, info};
 
 use edgehop::{
+    THIRD_PARTY_LICENSES,
     cli::{Cli, Mode},
     config::{Channel, Config},
     discover, switch,
@@ -27,11 +28,16 @@ fn main() -> Result<()> {
         .format_target(false)
         .init();
 
-    let mut hid = sys::HidApi::new()?;
     match cli.mode() {
-        Mode::List => list(&mut hid),
-        Mode::Switch(channel) => switch(&load_config(cli.config)?, &mut hid, channel),
-        Mode::Watch => watch(&load_config(cli.config)?, &mut hid),
+        Mode::List => list(&mut sys::HidApi::new()?),
+        Mode::Switch(channel) => {
+            switch(&load_config(cli.config)?, &mut sys::HidApi::new()?, channel)
+        }
+        Mode::Watch => watch(&load_config(cli.config)?, &mut sys::HidApi::new()?),
+        Mode::Licenses => {
+            print!("{THIRD_PARTY_LICENSES}");
+            Ok(())
+        }
     }
 }
 

@@ -1,0 +1,13 @@
+edgehop includes the following third-party software. This file is generated
+by cargo-about from about.toml; do not edit it by hand.
+{{#each licenses}}
+
+================================================================================
+{{{name}}}
+
+Used by:
+{{#each used_by}}
+- {{crate.name}} {{crate.version}}
+{{/each}}
+
+{{{text}}}{{/each}}
