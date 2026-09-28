@@ -25,6 +25,13 @@ zizmor = "*"
 [feature.lint.tasks]
 pre-commit-install = "lefthook install"
 lint = "lefthook run pre-commit --all-files"
+# Until cargo-about is on conda-forge: a pinned build in the pixi directory.
+install-cargo-about = "cargo install --locked --quiet --features cli cargo-about@0.9.2 --root .pixi/cargo-about"
+# Fetches first, so the generation itself runs offline and does not depend on
+# license files fetched from the network.
+licenses = { cmd = "cargo fetch --locked --quiet && .pixi/cargo-about/bin/cargo-about generate --frozen --fail about.hbs -o THIRD_PARTY_LICENSES.txt", depends-on = [
+  "install-cargo-about",
+] }
 
 [environments]
 default = ["lint"]

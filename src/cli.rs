@@ -39,6 +39,10 @@ struct ModeArgs {
     /// Switch the configured devices to CHANNEL (1-3) once and exit.
     #[arg(long, value_name = "CHANNEL")]
     switch: Option<Channel>,
+
+    /// Print the licenses of the third-party software in edgehop.
+    #[arg(long)]
+    licenses: bool,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -46,6 +50,7 @@ pub enum Mode {
     Watch,
     List,
     Switch(Channel),
+    Licenses,
 }
 
 impl Cli {
@@ -56,6 +61,7 @@ impl Cli {
                 ..
             } => Mode::Switch(channel),
             ModeArgs { list: true, .. } => Mode::List,
+            ModeArgs { licenses: true, .. } => Mode::Licenses,
             ModeArgs { .. } => Mode::Watch,
         }
     }
@@ -84,6 +90,7 @@ mod tests {
             parse(&["--switch", "2"]).unwrap().mode(),
             Mode::Switch(2.try_into().unwrap())
         );
+        assert_eq!(parse(&["--licenses"]).unwrap().mode(), Mode::Licenses);
     }
 
     #[test]
