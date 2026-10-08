@@ -43,16 +43,12 @@ impl desktop::Desktop for Desktop {
     }
 
     fn button_held(&self) -> bool {
-        [
-            CGMouseButton::Left,
-            CGMouseButton::Right,
-            CGMouseButton::Center,
-        ]
-        .into_iter()
-        // SAFETY: plain Quartz call without pointers.
-        .any(|button| unsafe {
-            CGEventSourceButtonState(CGEventSourceStateID::CombinedSessionState, button)
-        })
+        [CGMouseButton::Left, CGMouseButton::Right]
+            .into_iter()
+            // SAFETY: plain Quartz call without pointers.
+            .any(|button| unsafe {
+                CGEventSourceButtonState(CGEventSourceStateID::CombinedSessionState, button)
+            })
     }
 
     fn contains(&self, Point { x, y }: Point) -> bool {

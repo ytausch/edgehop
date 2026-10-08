@@ -25,8 +25,8 @@ pub trait Desktop {
     /// screen is locked).
     fn cursor(&self) -> Option<Point>;
 
-    /// Whether a mouse button is held down, e.g. while dragging a window or
-    /// selecting text.
+    /// Whether the left or right mouse button is held down, e.g. while
+    /// dragging a window or selecting text.
     fn button_held(&self) -> bool;
 
     /// Whether any display shows `point`.
