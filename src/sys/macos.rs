@@ -42,10 +42,25 @@ impl desktop::Desktop for Desktop {
         })
     }
 
+    fn button_held(&self) -> bool {
+        // Left, right, middle, back and forward.
+        // SAFETY: plain Quartz call without pointers.
+        (0..5).any(|button| unsafe {
+            CGEventSourceButtonState(CGEventSourceStateID::CombinedSessionState, button)
+        })
+    }
+
     fn contains(&self, Point { x, y }: Point) -> bool {
         let point = CGPoint::new(f64::from(x), f64::from(y));
         CGDisplay::display_count_with_point(point).is_ok_and(|count| count > 0)
     }
+}
+
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    // Missing from core-graphics. Takes a CGMouseButton, which core-graphics
+    // only has as an enum of the first three buttons.
+    fn CGEventSourceButtonState(state: CGEventSourceStateID, button: u32) -> bool;
 }
 
 pub fn config_dir() -> Result<PathBuf> {

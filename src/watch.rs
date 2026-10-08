@@ -76,13 +76,20 @@ impl Watcher {
 
     /// Feeds `cursor` to the trigger. Returns the channel to switch to, if
     /// any.
+    ///
+    /// A held mouse button means a drag, which can hit an edge without
+    /// meaning to switch, so the cursor counts as away from the edges then.
     fn triggered(
         &mut self,
         desktop: &impl Desktop,
         cursor: Point,
         now: Instant,
     ) -> Option<Channel> {
-        let at = desktop.edge_at(cursor, self.edges.configured());
+        let at = if desktop.button_held() {
+            None
+        } else {
+            desktop.edge_at(cursor, self.edges.configured())
+        };
         let edge = self.trigger.update(now, cursor, at)?;
         let channel = self.edges.channel(edge)?;
         info!("cursor rested at the {edge} edge; switching to channel {channel}");
@@ -245,6 +252,28 @@ mod tests {
         harness.at(0);
         harness.at(1000);
         assert!(harness.hid.writes.borrow().is_empty());
+    }
+
+    #[test]
+    fn does_not_switch_while_a_button_is_held() {
+        let mut harness = Harness::new(connected(&[KEYBOARD, MOUSE]));
+        harness.desktop.button_held.set(true);
+        harness.switch();
+        harness.at(1000);
+        assert!(harness.hid.writes.borrow().is_empty());
+    }
+
+    #[test]
+    fn waits_for_the_dwell_time_after_a_button_is_released() {
+        let mut harness = Harness::new(connected(&[KEYBOARD, MOUSE]));
+        harness.desktop.button_held.set(true);
+        harness.switch();
+        harness.desktop.button_held.set(false);
+        harness.at(150);
+        harness.at(249);
+        assert_eq!(hosts_set(&harness.hid), []);
+        harness.at(250);
+        assert_eq!(hosts_set(&harness.hid), [(KEYBOARD, 2), (MOUSE, 2)]);
     }
 
     #[test]
