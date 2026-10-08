@@ -25,6 +25,10 @@ pub trait Desktop {
     /// screen is locked).
     fn cursor(&self) -> Option<Point>;
 
+    /// Whether the left or right mouse button is held down, e.g. while
+    /// dragging a window or selecting text.
+    fn button_held(&self) -> bool;
+
     /// Whether any display shows `point`.
     fn contains(&self, point: Point) -> bool;
 
@@ -83,6 +87,7 @@ pub mod fake {
     /// Displays as rectangles `(left, top, width, height)`.
     pub struct FakeDesktop {
         pub cursor: Cell<Option<Point>>,
+        pub button_held: Cell<bool>,
         pub displays: Vec<(i32, i32, i32, i32)>,
     }
 
@@ -90,6 +95,7 @@ pub mod fake {
         pub fn new(displays: &[(i32, i32, i32, i32)]) -> Self {
             Self {
                 cursor: Cell::new(None),
+                button_held: Cell::new(false),
                 displays: displays.to_vec(),
             }
         }
@@ -102,6 +108,10 @@ pub mod fake {
     impl Desktop for FakeDesktop {
         fn cursor(&self) -> Option<Point> {
             self.cursor.get()
+        }
+
+        fn button_held(&self) -> bool {
+            self.button_held.get()
         }
 
         fn contains(&self, Point { x, y }: Point) -> bool {

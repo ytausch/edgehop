@@ -10,7 +10,7 @@ use std::{env, path::PathBuf};
 use anyhow::{Context, Result, anyhow};
 use core_graphics::{
     display::CGDisplay,
-    event::CGEvent,
+    event::{CGEvent, CGMouseButton},
     event_source::{CGEventSource, CGEventSourceStateID},
     geometry::CGPoint,
 };
@@ -42,10 +42,25 @@ impl desktop::Desktop for Desktop {
         })
     }
 
+    fn button_held(&self) -> bool {
+        [CGMouseButton::Left, CGMouseButton::Right]
+            .into_iter()
+            // SAFETY: plain Quartz call without pointers.
+            .any(|button| unsafe {
+                CGEventSourceButtonState(CGEventSourceStateID::CombinedSessionState, button)
+            })
+    }
+
     fn contains(&self, Point { x, y }: Point) -> bool {
         let point = CGPoint::new(f64::from(x), f64::from(y));
         CGDisplay::display_count_with_point(point).is_ok_and(|count| count > 0)
     }
+}
+
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    // Missing from core-graphics.
+    fn CGEventSourceButtonState(state: CGEventSourceStateID, button: CGMouseButton) -> bool;
 }
 
 pub fn config_dir() -> Result<PathBuf> {

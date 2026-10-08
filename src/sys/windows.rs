@@ -15,6 +15,7 @@ use windows::Win32::{
     Graphics::Gdi::{MONITOR_DEFAULTTONULL, MonitorFromPoint},
     UI::{
         HiDpi::{DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext},
+        Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON},
         WindowsAndMessaging::GetCursorPos,
     },
 };
@@ -45,6 +46,16 @@ impl desktop::Desktop for Desktop {
             x: point.x,
             y: point.y,
         })
+    }
+
+    fn button_held(&self) -> bool {
+        // The most significant bit is set while the button is down. These are
+        // the physical buttons, before swapping the primary and secondary
+        // button, which does not matter when checking both.
+        [VK_LBUTTON, VK_RBUTTON]
+            .into_iter()
+            // SAFETY: plain Win32 call without pointers.
+            .any(|button| unsafe { GetAsyncKeyState(i32::from(button.0)) } < 0)
     }
 
     fn contains(&self, Point { x, y }: Point) -> bool {
