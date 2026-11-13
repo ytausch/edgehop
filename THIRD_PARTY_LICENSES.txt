@@ -244,11 +244,11 @@ Used by:
 - env_logger 0.11.11
 - is_terminal_polyfill 1.70.2
 - once_cell_polyfill 1.70.2
-- serde_spanned 1.1.1
-- toml 1.1.6+spec-1.1.0
-- toml_datetime 1.1.1+spec-1.1.0
-- toml_parser 1.1.3+spec-1.1.0
-- toml_writer 1.1.2+spec-1.1.0
+- serde_spanned 1.1.2
+- toml 1.1.8+spec-1.1.0
+- toml_datetime 1.1.2+spec-1.1.0
+- toml_parser 1.1.5+spec-1.1.0
+- toml_writer 1.1.3+spec-1.1.0
 
 Copyright (c) Individual contributors
 
